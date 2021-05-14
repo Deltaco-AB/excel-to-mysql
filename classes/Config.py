@@ -12,7 +12,8 @@ def create_config():
 			"mysql_passwd": "",
 			"mysql_db": ""
 		},
-		"create_tables": True # Attempt to create missing tables in DB
+		"create_tables": True, # Attempt to create missing tables in DB
+		"chunk_size": 100 # Number of rows to insert into db at a time
 	}
 
 	# Create config file
