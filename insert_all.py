@@ -3,6 +3,7 @@ from pathlib import Path
 from classes.Excel import Excel
 from classes.Database import Database
 from classes.Config import get_config
+from classes.Worker import Job
 
 excel_dir = "sheets/"
 
@@ -23,4 +24,5 @@ for xlsx in xlsx_files:
 	if(db_config["create_tables"]):
 		db.create_table()
 
-	db.append_column("RetItemId","varchar")
+	worker = Job(db,excel)
+	worker.run()
