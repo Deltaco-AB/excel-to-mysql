@@ -6,10 +6,13 @@ config_file = "mysql_config.json"
 def create_config():
 	config = {
 		# MySQL settings
-		"mysql_host": "",
-		"mysql_user": "",
-		"mysql_passwd": "",
-		"mysql_db": ""
+		"server": {
+			"mysql_host": "",
+			"mysql_user": "",
+			"mysql_passwd": "",
+			"mysql_db": ""
+		},
+		"create_tables": True # Attempt to create missing tables in DB
 	}
 
 	# Create config file
