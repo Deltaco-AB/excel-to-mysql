@@ -38,10 +38,12 @@ class Job():
 		time.sleep(10)
 		self.db.truncate()
 
+	# Create database columns from Excel headers
 	def create_columns(self):
 		columns = {}
 		for column in self.columns:
-			datatype = type(self.data[column][0]).__name__ # Let first row of column determine the data type
+			# Let first item for Excel header determine the column data type
+			datatype = type(self.data[column][0]).__name__
 
 			# Treat unknown data types as strings
 			if(datatype not in datatypes):
@@ -53,6 +55,7 @@ class Job():
 		self.db.append_columns(columns)
 		self.db.drop_column(self.db.placeholder) # Remove placeholder column
 
+	# Create database insertable list from Excel rows
 	def insert_rows(self):
 		rows = []
 
@@ -62,8 +65,10 @@ class Job():
 				self.db.insert_rows(rows)
 				rows = []
 
+			values = []
 			for column in self.columns:
-				rows.append(self.data[column][index])
+				values.append(self.data[column][index])
+			rows.append(values)
 
 		# Insert remaining rows
 		if(len(rows) > 0):
