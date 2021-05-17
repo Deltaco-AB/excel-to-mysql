@@ -2,7 +2,7 @@
 
 A strict one-to-one importer of Excel `.xlsx` files to MySQL tables.
 
-The post-processor functions enables fine tuning of the imported data such as type casting and indexing.
+The [post-processor functions](#basic-import-with-post-processing) enables fine tuning of the imported data such as type casting and indexing.
 
 ## Installation
 
@@ -140,4 +140,5 @@ Data|Structure|Administraton
 `INSERT`|`ALTER`|
 `UPDATE`|`INDEX`|
 ||`DROP`|
+||`CREATE`|
 
