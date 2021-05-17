@@ -12,8 +12,17 @@ def create_config():
 			"mysql_passwd": "",
 			"mysql_db": ""
 		},
-		"create_tables": True, # Attempt to create missing tables in DB
-		"chunk_size": 100 # Number of rows to insert into db at a time
+		"rebuild_tables": True, # Rebuild tables and create if missing
+		"chunk_size": 100, # Number of rows to insert into db at a time
+		# Additional work after insertion is done
+		"post_processing": {
+			"change": {}, # Object with key,value pairs of columns to type cast
+			# Create indices (will run after "change")
+			"index": {
+				"primary": None, # Primary key (post-change),
+				"columns": [] # Array of columns to index 
+			}
+		}
 	}
 
 	# Create config file

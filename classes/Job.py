@@ -2,28 +2,50 @@ import time
 
 # Data type translation lookup table
 datatypes = {
-	"str": "TEXT",
-	"NaTType": "VARCHAR",
-	"int": "INT",
-	"int64": "INT",
-	"float": "FLOAT",
-	"float64": "DOUBLE",
-	"bool_": "BOOLEAN",
-	"Timestamp": "DATE",
+	"object": "TEXT",
+	"int": "VARCHAR",
+	"int64": "VARCHAR",
+	"float": "VARCHAR",
+	"float64": "VARCHAR",
+	"bool": "BOOLEAN",
+	"datetime64[ns]": "DATE",
 }
 
-class Job():
+class Post_Processing():
+	def __init__(self,config):
+		self.config = config["post_processing"]
+
+	# Type cast columns (SQL CHANGE)
+	def change(self):
+		change = self.config["change"]
+
+		if(len(change.keys()) > 0):
+			for column,datatype in change.items():
+				self.db.change(column,datatype)
+
+	def primary_key(self):
+		column = self.config["index"]["primary"]
+		if(not column):
+			return False
+
+		return self.db.make_unique(column)
+
+	def index(self):
+		columns = self.config["index"]["columns"]
+
+		if(len(columns) < 1):
+			return False
+
+		for column in columns:
+			self.db.make_index(column)
+
+class Worker(Post_Processing):
 	def __init__(self,db,excel):
 		self.db = db
 		self.data = excel.dataframe
 		self.columns = excel.get_headers()
 
 		self._chunk_size = 100
-
-		# Use first column as primary key
-		primary = self.columns[0]
-		self.db.append_column(primary)
-		self.db.make_unique(primary)
 
 	@property
 	def chunk_size(self):
@@ -33,21 +55,23 @@ class Job():
 	def chunk_size(self,size):
 		self._chunk_size = size
 
-	def truncate(self):
-		print(f"Table {self.db.table} is about to get wiped (truncated) for data-entry. Interrupt within 10 seconds to abort.")
-		time.sleep(10)
-		self.db.truncate()
+	# Post processing invoker and sequencer
+	def post_processing(self,config):
+		super(Worker,self).__init__(config)
+		self.change()
+		self.primary_key()
+		self.index()
 
 	# Create database columns from Excel headers
 	def create_columns(self):
 		columns = {}
 		for column in self.columns:
 			# Let first item for Excel header determine the column data type
-			datatype = type(self.data[column][0]).__name__
+			datatype = str(self.data[column].dtype)
 
-			# Treat unknown data types as strings
+			# Treat unknown data types as pandas object (string)
 			if(datatype not in datatypes):
-				datatype = "str"
+				datatype = "object"
 
 			# Translate Python (panda) types to SQL types
 			columns[column] = datatypes[datatype]
@@ -67,7 +91,8 @@ class Job():
 
 			values = []
 			for column in self.columns:
-				values.append(self.data[column][index])
+				value = self.data[column][index]
+				values.append(value)
 			rows.append(values)
 
 		# Insert remaining rows

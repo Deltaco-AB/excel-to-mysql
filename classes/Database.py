@@ -1,44 +1,15 @@
-from MySQLdb import _mysql as MySQL_Connector
+from .Database_MySQL import MySQL
 
-class MySQL():
-	def __init__(self,host,user,passwd,db):
-		self.mysql = MySQL_Connector.connect(host=host,user=user,passwd=passwd,db=db)
-		self.db = db
-		self.engine = "InnoDB"
-
-		self._table = None
-
-	@property
-	def table(self):
-		return self._table
-
-	@table.setter
-	def table(self,name):
-		self._table = f"`{self.db}`.`{name}`"
-
-	# Run and return SQL query
-	def query(self,sql,maxrows = 0):
-		try:
-			self.mysql.query(sql)
-			result = self.mysql.store_result()
-			return result.fetch_row(maxrows=maxrows)
-		except Exception as e:
-			return e
-
-	# Return true if an SQL query returned a match
-	def truthy(self,result):
-		if(isinstance(result,Exception) or len(result) < 1):
-			return False
-		return True
-
-	def escape(self,string):
-		string = self.mysql.escape_string(string)
-		string = string.decode("utf-8")
-		return string
+coercive_datatype = {
+	"TRUE": "1",
+	"FALSE": "0",
+	"NAT": "NULL",
+	"NAN": "NULL"
+}
 
 # Contains bulk variants of methods defined in Database class
 # These methods follow an arbitrary protocol for parsing data
-class BulkTools():
+class Database_BulkTools():
 	# Append multiple columns at once
 	# Protocol:
 	# - Expects a list of string key, value pairs
@@ -55,7 +26,7 @@ class BulkTools():
 			if(column_type == "VARCHAR"):
 				column_type = f"VARCHAR({self.default_length})"
 			
-			queries.append(f"ADD `{column_name}` {column_type} NOT NULL")
+			queries.append(f"ADD `{column_name}` {column_type}")
 		
 		# Concat all queries and execute
 		queries = ",".join(queries)
@@ -84,6 +55,11 @@ class BulkTools():
 				value = str(value)
 				value = self.escape(value)
 
+				# Translate data types to value
+				if(value.upper() in coercive_datatype):
+					values.append(coercive_datatype[value.upper()])
+					continue
+
 				# Add the value for this row as a string ''
 				values.append(f"'{value}'")
 
@@ -95,7 +71,7 @@ class BulkTools():
 		sql = f"INSERT INTO {self.table} ({columns_sql}) VALUES {values};"
 		return self.bquery(sql)
 
-class Database(MySQL,BulkTools):
+class Database(MySQL,Database_BulkTools):
 	def __init__(self,host,user,passwd,db):
 		super(Database,self).__init__(host,user,passwd,db)
 		self.default_length = 256
@@ -141,7 +117,7 @@ class Database(MySQL,BulkTools):
 		if(self.table_exists()):
 			return False
 		
-		sql = f"CREATE TABLE {self.table} (`{self.placeholder}` INT NULL) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE = {self.engine};"
+		sql = f"CREATE TABLE {self.table} (`{self.placeholder}` INT NULL) CHARACTER SET {self.charset} COLLATE {self.collate} ENGINE = {self.engine};"
 		return self.bquery(sql)
 
 	# Append new column
@@ -160,23 +136,33 @@ class Database(MySQL,BulkTools):
 	def make_unique(self,column,update = False):
 		if(update):
 			# Update existing primary key
-			sql = f"ALTER TABLE {self.table} DROP PRIMARY KEY, ADD PRIMARY KEY(`{column}`)"
+			sql = f"ALTER TABLE {self.table} DROP PRIMARY KEY, ADD PRIMARY KEY(`{column}`);"
 			return self.bquery(sql)
 		else:
 			# Add new primary key
-			sql = f"ALTER TABLE {self.table} ADD PRIMARY KEY(`{column}`)"
-			if(not self.bquery(sql)):
+			sql = f"ALTER TABLE {self.table} ADD PRIMARY KEY(`{column}`);"
+			result = self.bquery(sql)
+			if(not result):
 				# Attempt to update existing if query fails
 				self.make_unique(column,True)
+			return result
+
+	def make_index(self,column):
+		sql = f"ALTER TABLE {self.table} ADD INDEX(`{column}`);"
+		return self.bquery(sql)
+
+	def change(self,column,datatype):
+		sql = f"ALTER TABLE {self.table} CHANGE `{column}` `{column}` {datatype} CHARACTER SET {self.charset} COLLATE {self.collate} NULL DEFAULT NULL;"
+		return self.bquery(sql)
 
 	def drop_column(self,column):
-		sql = f"ALTER TABLE {self.table} DROP `{column}`";
+		sql = f"ALTER TABLE {self.table} DROP `{column}`;";
 		return self.bquery(sql)
 
 	def truncate(self):
-		sql = f"TRUNCATE {self.table}"
+		sql = f"TRUNCATE TABLE {self.table};"
 		return self.bquery(sql)
 
 	def drop(self):
-		sql = f"DROP {self.table}"
+		sql = f"DROP TABLE {self.table};"
 		return self.bquery(sql)

@@ -3,7 +3,7 @@ from pathlib import Path
 from classes.Excel import Excel
 from classes.Database import Database
 from classes.Config import get_config
-from classes.Worker import Job
+from classes.Job import Worker
 
 excel_dir = "sheets/"
 
@@ -21,8 +21,13 @@ for xlsx in xlsx_files:
 	# Use the extensionless file name as table name in the selected db
 	db.table = excel_name
 
-	if(db_config["create_tables"]):
+	# Drop and re-create table
+	if(db_config["rebuild_tables"]):
+		db.drop()
 		db.create_table()
 
-	worker = Job(db,excel)
-	worker.run()
+	job = Worker(db,excel)
+	job.run()
+
+	# Perform additional work defined in config
+	job.post_processing(db_config)
