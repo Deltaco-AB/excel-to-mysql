@@ -57,7 +57,7 @@ python3 import_all.py
 
 **If `rebuild_tables` is `true` (which is the default setting), a MySQL user with [these privileges](#standard-privileges) are required**
 
-Setting this value to `false` will append columns and rows to an already existing database and table, in which case only requires [these privileges](#base-privileges) are required.
+Setting this value to `false` will append columns and rows to an already existing database and table, in which case; [these privileges](#base-privileges) are required.
 
 ---
 
