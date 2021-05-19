@@ -82,23 +82,39 @@ class Worker(Post_Processing):
 	# Create database insertable list from Excel rows
 	def insert_rows(self):
 		rows = []
+		stats = {
+			"rows": 0,
+			"queries": 0
+		}
+
+		def stats_incr(key,add = 1):
+			stats[key] += add
+			print(f"[ Rows added: {stats['rows']} (queries={stats['queries']}) ]",end="\r",flush="True")
 
 		for index in range(1,len(self.data)):
 			# Dispatch chunks for database insertion when threshold is satisfied
 			if(index % self.chunk_size == 0):
 				self.db.insert_rows(rows)
 				rows = []
+				stats_incr("queries")
 
 			values = []
 			for column in self.columns:
 				value = self.data[column][index]
 				values.append(value)
 			rows.append(values)
+			stats_incr("rows")
 
 		# Insert remaining rows
 		if(len(rows) > 0):
 			self.db.insert_rows(rows)
+			stats_incr("rows",len(rows))
+			stats_incr("queries")
+
+		return stats
 
 	def run(self):
 		self.create_columns()
-		self.insert_rows()
+		print("Inserting rows..")
+		stats = self.insert_rows()
+		print(f"Inserted {stats['rows']} rows into {self.db.table}")

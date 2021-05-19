@@ -13,7 +13,7 @@ def create_config():
 			"mysql_db": ""
 		},
 		"rebuild_tables": True, # Rebuild tables and create if missing
-		"chunk_size": 100, # Number of rows to insert into db at a time
+		"chunk_size": 1000, # Number of rows to insert into db at a time
 		# Additional work after insertion is done
 		"post_processing": {
 			"change": {}, # Object with key,value pairs of columns to type cast
