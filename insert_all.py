@@ -1,15 +1,8 @@
 from pathlib import Path
+from classes import *
 
-from classes.Excel import Excel
-from classes.Database import Database
-from classes.Config import get_config
-from classes.Job import Worker
-
-excel_dir = "sheets/"
-
-db_config = get_config() # Import db config from file or generate
-
-db = Database(db_config["server"]["mysql_host"],db_config["server"]["mysql_user"],db_config["server"]["mysql_passwd"],db_config["server"]["mysql_db"])
+excel_dir = Globals.get_excel_list()
+db = Globals.db_connect()
 
 # Get all xlsx files from the current directory
 xlsx_files = list(Path(excel_dir).glob("*.xlsx"))
@@ -38,4 +31,4 @@ for xlsx in xlsx_files:
 	print("Finishing up..")
 	job.post_processing(db_config)
 
-	print(f"\nExcel sheet from '{xlsx.name}' has been inserted into: [{db_config['server']['mysql_host']}%{db.table}]")
+	print(f"\nExcel sheet from '{xlsx.name}' has been inserted into: [{Globals.get_db_host()}%{db.table}]")
