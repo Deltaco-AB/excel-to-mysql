@@ -1,5 +1,3 @@
-import time
-
 # Data type translation lookup table
 datatypes = {
 	"object": "TEXT",
