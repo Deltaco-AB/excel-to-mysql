@@ -14,6 +14,7 @@ def create_config():
 		},
 		"rebuild_tables": True, # Rebuild tables and create if missing
 		"chunk_size": 1000, # Number of rows to insert into db at a time
+		"rename": {}, # Rename column from Excel
 		# Additional work after insertion is done
 		"post_processing": {
 			"change": {}, # Object with key,value pairs of columns to type cast

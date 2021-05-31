@@ -147,6 +147,8 @@ class Database(MySQL,Database_BulkTools):
 				self.make_unique(column,True)
 			return result
 
+	# ----
+
 	def make_index(self,column):
 		sql = f"ALTER TABLE {self.table} ADD INDEX(`{column}`);"
 		return self.bquery(sql)

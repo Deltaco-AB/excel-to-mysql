@@ -23,8 +23,7 @@ for xlsx in xlsx_files:
 		db.drop()
 		db.create_table()
 
-	job = Worker(db,excel)
-	job.chunk_size = db_config["chunk_size"]
+	job = Worker(db,excel,db_config)
 	job.run()
 
 	# Perform additional work defined in config

@@ -38,12 +38,13 @@ class Post_Processing():
 			self.db.make_index(column)
 
 class Worker(Post_Processing):
-	def __init__(self,db,excel):
+	def __init__(self,db,excel,config):
 		self.db = db
+		self.config = config
 		self.data = excel.dataframe
 		self.columns = excel.get_headers()
 
-		self._chunk_size = 100
+		self._chunk_size = config["chunk_size"]
 
 	@property
 	def chunk_size(self):
@@ -66,6 +67,10 @@ class Worker(Post_Processing):
 		for column in self.columns:
 			# Let first item for Excel header determine the column data type
 			datatype = str(self.data[column].dtype)
+
+			# Rename column from config
+			if(column in self.config["rename"].keys()):
+				column = self.config["rename"][column]
 
 			# Treat unknown data types as pandas object (string)
 			if(datatype not in datatypes):
